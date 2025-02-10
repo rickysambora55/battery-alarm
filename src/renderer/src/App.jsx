@@ -1,4 +1,4 @@
-import electronLogo from "./assets/img/electron.svg";
+import logo from "./assets/img/icon.svg";
 import { useEffect, useState } from "react";
 import highAlert from "./assets/audio/high.mp3";
 import lowAlert from "./assets/audio/low.mp3";
@@ -96,7 +96,7 @@ function App() {
 
     return (
         <main>
-            <img alt="logo" className="logo" src={electronLogo} />
+            <img alt="logo" className="logo" src={logo} />
             <div className="charging">
                 {batteryInfo.charging ? "Charging" : "Not Charging"}
             </div>
