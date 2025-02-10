@@ -1,4 +1,4 @@
-import logo from "./assets/img/icon.svg";
+import { ChargingIcon } from "./assets/img/svg";
 import { useEffect, useState } from "react";
 import highAlert from "./assets/audio/high.mp3";
 import lowAlert from "./assets/audio/low.mp3";
@@ -96,11 +96,37 @@ function App() {
 
     return (
         <main>
-            <img alt="logo" className="logo" src={logo} />
-            <div className="charging">
-                {batteryInfo.charging ? "Charging" : "Not Charging"}
+            <div className="container">
+                <div className="battery">
+                    <div
+                        className={`battery-level ${batteryInfo.level < 15 ? "alert" : batteryInfo.level < 25 ? "warn" : ""}`}
+                        style={{ height: `${batteryInfo.level}%` }}
+                    />
+                    {batteryInfo.charging && (
+                        <ChargingIcon
+                            className="charging"
+                            style={{ color: "#fcec03" }}
+                        />
+                    )}
+                </div>
+                <div className="info">
+                    <h2 className="title">Battery Information</h2>
+                    <div className="infoContent">
+                        <div className="infoList charge">
+                            <span>Status:</span>
+                            <span>
+                                {batteryInfo.charging
+                                    ? "Charging"
+                                    : "Not Charging"}
+                            </span>
+                        </div>
+                        <div className="infoList level">
+                            <span>Level:</span>
+                            <span>{batteryInfo.level}%</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div className="level">{batteryInfo.level}%</div>
         </main>
     );
 }
