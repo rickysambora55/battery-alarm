@@ -1,23 +1,45 @@
 @import "./base.css";
 
+/* Main */
 body {
-    padding: 4rem;
+    padding: 1rem;
 }
 
-.container {
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Top */
+.battery-section {
     display: flex;
     justify-content: space-around;
 }
 
-.info {
+.info-brief {
     width: 50%;
+    padding: 2rem 0rem;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    font-size: larger;
+}
+
+.info-brief table tbody tr th {
+    font-weight: bold;
+}
+
+/* Info */
+.info {
+    width: 100%;
     padding: 1rem 1.5rem;
     background: #fcfcfc;
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 1rem;
 }
 
@@ -32,9 +54,152 @@ body {
     gap: 0.1rem;
 }
 
-.infoList {
+.infoContent .table-body {
+    text-align: left;
+}
+
+.settingContent {
+    width: 100%;
     display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.settingItem {
+    display: flex;
+    flex-direction: column;
+}
+
+.level {
+    color: #30b455;
+    font-weight: bold;
+}
+.level.warn {
+    color: #efaf13;
+}
+.level.alert {
+    color: #e81309;
+}
+
+/* Slider/Range Input */
+.slidecontainer {
+    width: 12rem;
+}
+
+.slidecontainer input {
+    width: 100%;
+}
+
+.slidecontainer input {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 15px;
+    background: #d3d3d3;
+    outline: none;
+    opacity: 0.85;
+    -webkit-transition: 0.2s;
+    transition: opacity 0.2s;
+    border-radius: 12px;
+}
+
+.slidecontainer input:hover {
+    opacity: 1;
+}
+
+.slidecontainer input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 25px;
+    height: 15px;
+    background: #2196f3;
+    cursor: pointer;
+    border-radius: 12px;
+}
+
+.slidecontainer input::-moz-range-thumb {
+    width: 25px;
+    height: 15px;
+    background: #2196f3;
+    cursor: pointer;
+    border-radius: 12px;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Toggle Switch */
+.switchcontainer {
+    display: flex;
+    align-items: center;
     gap: 0.5rem;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 30px;
+    height: 14px;
+    bottom: -2px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    opacity: 0.85;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: 0.4s;
+    transition: 0.4s;
+}
+
+.slider:hover {
+    opacity: 1;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 10px;
+    width: 10px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    -webkit-transition: 0.4s;
+    transition: 0.4s;
+}
+
+input:checked + .slider {
+    background-color: #2196f3;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #2196f3;
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(16px);
+    -ms-transform: translateX(16px);
+    transform: translateX(16px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
 }
 
 /* Battery */

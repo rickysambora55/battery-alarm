@@ -8,15 +8,17 @@ const __dirname = path.dirname(__filename);
 const compat = new FlatCompat({
     baseDirectory: __dirname,
     recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all
+    allConfig: js.configs.all,
 });
 
-export default [{
-    ignores: ["**/node_modules", "**/dist", "**/out", "**/.gitignore"],
-}, ...compat.extends(
-    "eslint:recommended",
-    "plugin:react/recommended",
-    "plugin:react/jsx-runtime",
-    "@electron-toolkit",
-    "@electron-toolkit/eslint-config-prettier",
-)];
+export default [
+    {
+        ignores: ["**/node_modules", "**/dist", "**/out", "**/.gitignore"],
+    },
+    ...compat.extends(
+        "eslint:recommended",
+        "plugin:react/recommended",
+        "plugin:react/jsx-runtime",
+        "@electron-toolkit"
+    ),
+];

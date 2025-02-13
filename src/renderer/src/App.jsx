@@ -9,123 +9,291 @@ const audioLow = new Audio(lowAlert);
 const chargeToggle = new Audio(charge);
 
 function playSound(audio) {
+    audio.currentTime = 0;
     audio.play().catch((err) => console.error("Audio play failed:", err));
 }
 
-function App() {
-    const [batteryInfo, setBatteryInfo] = useState({
-        level: 0,
-        charging: false,
-        chargingTime: 0,
-        dischargingTime: 0,
+function TableRow({ name, value, classHead, classData }) {
+    return (
+        <tr>
+            <th className={classHead}>{name}</th>
+            <td className={classData}>{value}</td>
+        </tr>
+    );
+}
+
+function Battery({ batteryStatus }) {
+    return (
+        <div className="battery">
+            <div
+                className={`battery-level ${batteryStatus.percent < 15 ? "alert" : batteryStatus.percent < 25 ? "warn" : ""}`}
+                style={{ height: `${batteryStatus.percent}%` }}
+            />
+            {batteryStatus.isCharging && (
+                <ChargingIcon
+                    className="charging"
+                    style={{ color: "#fcec03" }}
+                />
+            )}
+        </div>
+    );
+}
+
+function BatteryStatus({ batteryStatus, batteryInfo }) {
+    return (
+        <div className="info-brief">
+            <table>
+                <tbody className="table-body">
+                    <TableRow
+                        name="Status"
+                        value={
+                            batteryStatus.isCharging
+                                ? "Charging"
+                                : "Not Charging"
+                        }
+                    />
+                    <TableRow
+                        name="Level"
+                        value={`${batteryStatus.percent}%`}
+                    />
+                    <TableRow
+                        name="Time Remaining"
+                        value={
+                            batteryInfo.timeRemaining
+                                ? `${Math.floor(
+                                      batteryInfo.timeRemaining / 60
+                                  )} minutes`
+                                : "N/A"
+                        }
+                    />
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
+function BatterySection({ children }) {
+    return <div className="battery-section">{children}</div>;
+}
+
+function BatteryInformation({ batteryInfo, batteryStatus }) {
+    const healthColor = (level) => {
+        if (level < 50) {
+            return "alert";
+        } else if (level < 80) {
+            return "warn";
+        } else {
+            return "";
+        }
+    };
+
+    const health = (
+        (batteryInfo.maxCapacity / batteryInfo.designedCapacity) *
+        100
+    ).toFixed(0);
+
+    return (
+        <>
+            <h2 className="title">Battery Information</h2>
+            <div className="infoContent">
+                <table>
+                    <tbody className="table-body">
+                        <TableRow
+                            name="Health"
+                            value={`${health}%`}
+                            classData={`level ${healthColor(health)}`}
+                        />
+                        <TableRow
+                            name="Capacity"
+                            value={`${(
+                                (batteryInfo.maxCapacity *
+                                    batteryStatus.percent) /
+                                100
+                            ).toFixed(0)}
+                            ${batteryInfo.capacityUnit}`}
+                        />
+                        <TableRow
+                            name="Max Capacity"
+                            value={`${batteryInfo.maxCapacity}
+                            ${batteryInfo.capacityUnit}`}
+                        />
+                        <TableRow
+                            name="Designed Capacity"
+                            value={`${batteryInfo.designedCapacity}
+                            ${batteryInfo.capacityUnit}`}
+                        />
+                        <TableRow
+                            name="Voltage"
+                            value={`${batteryInfo.voltage}
+                            V`}
+                        />
+                        <TableRow
+                            name="Type"
+                            value={batteryInfo.type || "N/A"}
+                        />
+                        <TableRow name="Model" value={batteryInfo.model} />
+                    </tbody>
+                </table>
+            </div>
+        </>
+    );
+}
+
+function AlarmConfiguration({ batteryStatus }) {
+    const [batteryStatusPrev, setBatteryStatusPrev] = useState({
+        percent: 0,
+        isCharging: false,
+    });
+    const [notifyThreshold, setNotifyThreshold] = useState({
+        high: 80,
+        low: 15,
+        charging: true,
     });
 
+    // Audio playback
     useEffect(() => {
-        navigator.getBattery().then((battery) => {
-            function updateAllBatteryInfo() {
-                updateChargeInfo();
-                updateLevelInfo();
-                updateChargingInfo();
-                updateDischargingInfo();
-            }
-            updateAllBatteryInfo();
-
-            battery.addEventListener("chargingchange", updateChargeInfo);
-            battery.addEventListener("levelchange", updateLevelInfo);
-            battery.addEventListener("chargingtimechange", updateChargingInfo);
-            battery.addEventListener(
-                "dischargingtimechange",
-                updateDischargingInfo
-            );
-
-            function updateChargeInfo() {
-                if (battery.charging !== batteryInfo.charging) {
-                    playSound(chargeToggle);
-                }
-
-                setBatteryInfo((prev) => ({
-                    ...prev,
-                    charging: battery.charging,
-                }));
+        // Play audio only when values actually change
+        if (
+            batteryStatus.percent !== batteryStatusPrev.percent ||
+            batteryStatus.isCharging !== batteryStatusPrev.isCharging
+        ) {
+            if (
+                batteryStatus.percent !== 0 &&
+                batteryStatus.percent === notifyThreshold.low &&
+                !batteryStatus.isCharging
+            ) {
+                playSound(audioLow);
+            } else if (
+                batteryStatus.percent === notifyThreshold.high &&
+                batteryStatus.isCharging
+            ) {
+                playSound(audioHigh);
+            } else if (
+                notifyThreshold.charging &&
+                batteryStatus.isCharging !== batteryStatusPrev.isCharging
+            ) {
+                playSound(chargeToggle);
             }
 
-            function updateLevelInfo() {
-                const newLevel = Math.floor(battery.level * 100);
+            setBatteryStatusPrev(batteryStatus);
+        }
+    }, [batteryStatus]);
 
-                if (newLevel === 20) {
-                    playSound(audioLow);
-                }
-                if (newLevel === 80) {
-                    playSound(audioHigh);
-                }
+    const handleCharger = (value) => {
+        setNotifyThreshold((prev) => ({
+            ...prev,
+            charging: value,
+        }));
+    };
 
-                setBatteryInfo((prev) => ({
-                    ...prev,
-                    level: newLevel,
-                }));
-            }
+    return (
+        <>
+            <h2 className="title">Alarm</h2>
+            <div className="settingContent">
+                <div className="settingItem">
+                    Charger Connected
+                    <div className="switchcontainer">
+                        <label className="switch">
+                            <input
+                                type="checkbox"
+                                checked={notifyThreshold.charging}
+                                onChange={(e) =>
+                                    handleCharger(e.target.checked)
+                                }
+                            />
+                            <span className="slider round"></span>
+                        </label>
+                        {notifyThreshold.charging ? "ON" : "OFF"}
+                    </div>
+                </div>
+                <div className="settingItem">
+                    Low Battery Alert ({notifyThreshold.low}%)
+                    <label className="slidecontainer">
+                        <input
+                            type="range"
+                            min={1}
+                            max={50}
+                            value={notifyThreshold.low}
+                            onChange={(e) => {
+                                let newValue = Number(e.target.value);
 
-            function updateChargingInfo() {
-                setBatteryInfo((prev) => ({
-                    ...prev,
-                    chargingTime: battery.chargingTime,
-                }));
-            }
+                                if (newValue < 1) newValue = 1;
+                                if (newValue > 50) newValue = 50;
 
-            function updateDischargingInfo() {
-                setBatteryInfo((prev) => ({
-                    ...prev,
-                    dischargingTime: battery.dischargingTime,
-                }));
-            }
+                                setNotifyThreshold((prev) => ({
+                                    ...prev,
+                                    low: newValue,
+                                }));
+                            }}
+                        />
+                    </label>
+                </div>
+                <div className="settingItem">
+                    Full Battery Alert ({notifyThreshold.high}%)
+                    <label className="slidecontainer">
+                        <input
+                            type="range"
+                            min={51}
+                            max={100}
+                            value={notifyThreshold.high}
+                            className="input-number"
+                            onChange={(e) => {
+                                let newValue = Number(e.target.value);
 
-            return () => {
-                battery.removeEventListener("chargingchange", updateChargeInfo);
-                battery.removeEventListener("levelchange", updateLevelInfo);
-                battery.removeEventListener(
-                    "chargingtimechange",
-                    updateChargingInfo
-                );
-                battery.removeEventListener(
-                    "dischargingtimechange",
-                    updateDischargingInfo
-                );
-            };
+                                if (newValue < 51) newValue = 51;
+                                if (newValue > 100) newValue = 100;
+
+                                setNotifyThreshold((prev) => ({
+                                    ...prev,
+                                    high: newValue,
+                                }));
+                            }}
+                        />
+                    </label>
+                </div>
+            </div>
+        </>
+    );
+}
+
+function App() {
+    const [batteryInfo, setBatteryInfo] = useState({});
+    const [batteryStatus, setBatteryStatus] = useState({
+        percent: 0,
+        isCharging: false,
+    });
+
+    // Update battery info once and auto loop percentage
+    useEffect(() => {
+        // Fetch battery specs (one-time)
+        async function fetchBatteryData() {
+            const data = await window.batteryAPI.getBatteryInfo();
+            setBatteryInfo(data);
+        }
+
+        fetchBatteryData();
+
+        // Listen for live updates from Battery API
+        window.batteryAPI.onBatteryUpdate((newBattery) => {
+            setBatteryStatus(newBattery);
         });
     }, []);
 
     return (
         <main>
-            <div className="container">
-                <div className="battery">
-                    <div
-                        className={`battery-level ${batteryInfo.level < 15 ? "alert" : batteryInfo.level < 25 ? "warn" : ""}`}
-                        style={{ height: `${batteryInfo.level}%` }}
-                    />
-                    {batteryInfo.charging && (
-                        <ChargingIcon
-                            className="charging"
-                            style={{ color: "#fcec03" }}
-                        />
-                    )}
-                </div>
-                <div className="info">
-                    <h2 className="title">Battery Information</h2>
-                    <div className="infoContent">
-                        <div className="infoList charge">
-                            <span>Status:</span>
-                            <span>
-                                {batteryInfo.charging
-                                    ? "Charging"
-                                    : "Not Charging"}
-                            </span>
-                        </div>
-                        <div className="infoList level">
-                            <span>Level:</span>
-                            <span>{batteryInfo.level}%</span>
-                        </div>
-                    </div>
-                </div>
+            <BatterySection>
+                <Battery batteryStatus={batteryStatus} />
+                <BatteryStatus
+                    batteryInfo={batteryInfo}
+                    batteryStatus={batteryStatus}
+                />
+            </BatterySection>
+            <div className="info">
+                <BatteryInformation
+                    batteryInfo={batteryInfo}
+                    batteryStatus={batteryStatus}
+                />
+                <AlarmConfiguration batteryStatus={batteryStatus} />
             </div>
         </main>
     );

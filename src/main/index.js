@@ -1,5 +1,14 @@
-import { app, shell, BrowserWindow, Menu, nativeImage, Tray } from "electron";
+import {
+    app,
+    shell,
+    BrowserWindow,
+    ipcMain,
+    Menu,
+    nativeImage,
+    Tray,
+} from "electron";
 import { join } from "path";
+import si from "systeminformation";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 const icon = join(app.getAppPath(), "resources", "icon.png");
 
@@ -56,6 +65,9 @@ function createWindow() {
         webPreferences: {
             preload: join(__dirname, "../preload/index.js"),
             sandbox: false,
+            nodeIntegration: false,
+            contextIsolation: true,
+            enableRemoteModule: false,
         },
     });
 
@@ -106,6 +118,15 @@ app.whenReady().then(() => {
         // On macOS it's common to re-create a window in the app when the
         // dock icon is clicked and there are no other windows open.
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
+
+    ipcMain.handle("get-battery-info", async () => {
+        try {
+            return await si.battery();
+        } catch (error) {
+            console.error("Error fetching battery data:", error);
+            return null;
+        }
     });
 });
 
