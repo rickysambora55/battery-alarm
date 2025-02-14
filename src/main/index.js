@@ -10,13 +10,18 @@ import {
 import { join } from "path";
 import si from "systeminformation";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
+
 const icon = join(app.getAppPath(), "resources", "icon.png");
 
+let batteryStatus = { percent: 0, isCharging: false };
 let mainWindow = null;
+let backgroundWindow = null;
 let tray = null;
+
 function createTray() {
     const trayicon = nativeImage.createFromPath(icon);
     tray = new Tray(trayicon.resize({ width: 16 }));
+    tray.setToolTip("Battery Alarm");
 
     const contextMenu = Menu.buildFromTemplate([
         {
@@ -85,16 +90,35 @@ function createWindow() {
         return { action: "deny" };
     });
 
-    // HMR for renderer base on electron-vite cli.
-    // Load the remote URL for development or the local html file for production.
-    if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
-        mainWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);
-    } else {
-        mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
+    if (!backgroundWindow) {
+        // Create a hidden background window
+        backgroundWindow = new BrowserWindow({
+            show: false,
+            icon: icon,
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false,
+            },
+        });
+        // backgroundWindow.webContents.openDevTools();
     }
 
     if (!tray) {
         createTray();
+    }
+
+    // HMR for renderer base on electron-vite cli.
+    // Load the remote URL for development or the local html file for production.
+    if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
+        mainWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);
+        backgroundWindow.loadURL(
+            process.env.ELECTRON_RENDERER_URL + "/background.html"
+        );
+    } else {
+        mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
+        backgroundWindow.loadFile(
+            join(__dirname, "../renderer/background.html")
+        );
     }
 }
 
@@ -127,6 +151,23 @@ app.whenReady().then(() => {
             console.error("Error fetching battery data:", error);
             return null;
         }
+    });
+
+    ipcMain.on("get-battery-update", (_event, batteryData) => {
+        batteryStatus = batteryData;
+
+        // Trigger notification
+        // monitorBattery();
+
+        // Send to all renderer processes
+        BrowserWindow.getAllWindows().forEach((win) => {
+            win.webContents.send("get-battery-update", batteryStatus);
+        });
+    });
+
+    // Handle request for initial battery status
+    ipcMain.on("request-battery-status", (event) => {
+        event.sender.send("get-battery-update", batteryStatus);
     });
 });
 

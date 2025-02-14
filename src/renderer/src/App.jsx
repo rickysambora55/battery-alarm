@@ -1,17 +1,5 @@
 import { ChargingIcon } from "./assets/img/svg";
 import { useEffect, useState } from "react";
-import highAlert from "./assets/audio/high.mp3";
-import lowAlert from "./assets/audio/low.mp3";
-import charge from "./assets/audio/charge.mp3";
-
-const audioHigh = new Audio(highAlert);
-const audioLow = new Audio(lowAlert);
-const chargeToggle = new Audio(charge);
-
-function playSound(audio) {
-    audio.currentTime = 0;
-    audio.play().catch((err) => console.error("Audio play failed:", err));
-}
 
 function TableRow({ name, value, classHead, classData }) {
     return (
@@ -131,7 +119,10 @@ function BatteryInformation({ batteryInfo, batteryStatus }) {
                             name="Type"
                             value={batteryInfo.type || "N/A"}
                         />
-                        <TableRow name="Model" value={batteryInfo.model} />
+                        <TableRow
+                            name="Model"
+                            value={batteryInfo.model || "N/A"}
+                        />
                     </tbody>
                 </table>
             </div>
@@ -140,56 +131,56 @@ function BatteryInformation({ batteryInfo, batteryStatus }) {
 }
 
 function AlarmConfiguration({ batteryStatus }) {
-    const [batteryStatusPrev, setBatteryStatusPrev] = useState({
-        percent: 0,
-        isCharging: false,
-    });
-    const [notifyThreshold, setNotifyThreshold] = useState({
-        high: 80,
-        low: 15,
-        charging: true,
-    });
+    // const [batteryStatusPrev, setBatteryStatusPrev] = useState({
+    //     percent: 0,
+    //     isCharging: false,
+    // });
+    // const [notifyThreshold, setNotifyThreshold] = useState({
+    //     high: 80,
+    //     low: 15,
+    //     charging: true,
+    // });
 
-    // Audio playback
-    useEffect(() => {
-        // Play audio only when values actually change
-        if (
-            batteryStatus.percent !== batteryStatusPrev.percent ||
-            batteryStatus.isCharging !== batteryStatusPrev.isCharging
-        ) {
-            if (
-                batteryStatus.percent !== 0 &&
-                batteryStatus.percent === notifyThreshold.low &&
-                !batteryStatus.isCharging
-            ) {
-                playSound(audioLow);
-            } else if (
-                batteryStatus.percent === notifyThreshold.high &&
-                batteryStatus.isCharging
-            ) {
-                playSound(audioHigh);
-            } else if (
-                notifyThreshold.charging &&
-                batteryStatus.isCharging !== batteryStatusPrev.isCharging
-            ) {
-                playSound(chargeToggle);
-            }
+    // // Audio playback
+    // useEffect(() => {
+    //     // Play audio only when values actually change
+    //     if (
+    //         batteryStatus.percent !== batteryStatusPrev.percent ||
+    //         batteryStatus.isCharging !== batteryStatusPrev.isCharging
+    //     ) {
+    //         if (
+    //             batteryStatus.percent !== 0 &&
+    //             batteryStatus.percent === notifyThreshold.low &&
+    //             !batteryStatus.isCharging
+    //         ) {
+    //             playSound(audioLow);
+    //         } else if (
+    //             batteryStatus.percent === notifyThreshold.high &&
+    //             batteryStatus.isCharging
+    //         ) {
+    //             playSound(audioHigh);
+    //         } else if (
+    //             notifyThreshold.charging &&
+    //             batteryStatus.isCharging !== batteryStatusPrev.isCharging
+    //         ) {
+    //             playSound(chargeToggle);
+    //         }
 
-            setBatteryStatusPrev(batteryStatus);
-        }
-    }, [batteryStatus]);
+    //         setBatteryStatusPrev((prev) => ({ ...prev, ...batteryStatus }));
+    //     }
+    // }, [batteryStatus]);
 
-    const handleCharger = (value) => {
-        setNotifyThreshold((prev) => ({
-            ...prev,
-            charging: value,
-        }));
-    };
+    // const handleCharger = (value) => {
+    //     setNotifyThreshold((prev) => ({
+    //         ...prev,
+    //         charging: value,
+    //     }));
+    // };
 
     return (
         <>
             <h2 className="title">Alarm</h2>
-            <div className="settingContent">
+            {/* <div className="settingContent">
                 <div className="settingItem">
                     Charger Connected
                     <div className="switchcontainer">
@@ -251,13 +242,21 @@ function AlarmConfiguration({ batteryStatus }) {
                         />
                     </label>
                 </div>
-            </div>
+            </div> */}
         </>
     );
 }
 
 function App() {
-    const [batteryInfo, setBatteryInfo] = useState({});
+    const [batteryInfo, setBatteryInfo] = useState({
+        maxCapacity: 0,
+        designedCapacity: 0,
+        timeRemaining: 0,
+        voltage: 0,
+        capacityUnit: "mAh",
+        type: "",
+        model: "",
+    });
     const [batteryStatus, setBatteryStatus] = useState({
         percent: 0,
         isCharging: false,
@@ -272,6 +271,9 @@ function App() {
         }
 
         fetchBatteryData();
+
+        // Request battery status when the app starts
+        window.batteryAPI.requestBatteryStatus();
 
         // Listen for live updates from Battery API
         window.batteryAPI.onBatteryUpdate((newBattery) => {

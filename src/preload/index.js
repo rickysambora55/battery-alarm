@@ -5,23 +5,13 @@ import { electronAPI } from "@electron-toolkit/preload";
 const api = {};
 
 const batteryAPI = {
-    getBatteryInfo: async () => await ipcRenderer.invoke("get-battery-info"), // Fetch static battery info
+    getBatteryInfo: async () => await ipcRenderer.invoke("get-battery-info"),
     onBatteryUpdate: (callback) => {
-        navigator.getBattery().then((battery) => {
-            function updateBattery() {
-                callback({
-                    percent: (battery.level * 100).toFixed(0),
-                    isCharging: battery.charging,
-                });
-            }
-
-            // Initial call
-            updateBattery();
-
-            // Listen for changes
-            battery.addEventListener("levelchange", updateBattery);
-            battery.addEventListener("chargingchange", updateBattery);
-        });
+        ipcRenderer.removeAllListeners("get-battery-update");
+        ipcRenderer.on("get-battery-update", (_event, data) => callback(data));
+    },
+    requestBatteryStatus: () => {
+        ipcRenderer.send("request-battery-status");
     },
 };
 

@@ -58,6 +58,16 @@ main {
     text-align: left;
 }
 
+.infoContent .table-body tr th {
+    width: 100%;
+    max-width: 50%;
+}
+
+.infoContent.table-body tr td {
+    width: 100%;
+    max-width: 50%;
+}
+
 .settingContent {
     width: 100%;
     display: flex;
