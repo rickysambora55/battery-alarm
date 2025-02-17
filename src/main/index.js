@@ -101,7 +101,7 @@ function createWindow() {
                 contextIsolation: false,
             },
         });
-        backgroundWindow.webContents.openDevTools();
+        // backgroundWindow.webContents.openDevTools();
     }
 
     if (!tray) {
