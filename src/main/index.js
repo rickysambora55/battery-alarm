@@ -89,6 +89,7 @@ function createWindow() {
         shell.openExternal(details.url);
         return { action: "deny" };
     });
+    // mainWindow.webContents.openDevTools();
 
     if (!backgroundWindow) {
         // Create a hidden background window
@@ -100,7 +101,7 @@ function createWindow() {
                 contextIsolation: false,
             },
         });
-        // backgroundWindow.webContents.openDevTools();
+        backgroundWindow.webContents.openDevTools();
     }
 
     if (!tray) {
@@ -112,12 +113,12 @@ function createWindow() {
     if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
         mainWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);
         backgroundWindow.loadURL(
-            process.env.ELECTRON_RENDERER_URL + "/background.html"
+            `${process.env["ELECTRON_RENDERER_URL"]}/background.html`
         );
     } else {
-        mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
+        mainWindow.loadFile(join(__dirname, `../renderer/index.html`));
         backgroundWindow.loadFile(
-            join(__dirname, "../renderer/background.html")
+            join(__dirname, `../renderer/background.html`)
         );
     }
 }
@@ -156,9 +157,6 @@ app.whenReady().then(() => {
     ipcMain.on("get-battery-update", (_event, batteryData) => {
         batteryStatus = batteryData;
 
-        // Trigger notification
-        // monitorBattery();
-
         // Send to all renderer processes
         BrowserWindow.getAllWindows().forEach((win) => {
             win.webContents.send("get-battery-update", batteryStatus);
@@ -169,6 +167,12 @@ app.whenReady().then(() => {
     ipcMain.on("request-battery-status", (event) => {
         event.sender.send("get-battery-update", batteryStatus);
     });
+
+    // App isBuilt info
+    ipcMain.handle("get-app-info", () => ({
+        isPackaged: app.isPackaged,
+        getAppPath: app.getAppPath(),
+    }));
 });
 
 app.on("before-quit", () => {

@@ -1,8 +1,12 @@
 const { ipcRenderer } = require("electron");
+const { join } = require("path");
+
+// Define audio files
 const audioHigh = "high.mp3";
 const audioLow = "low.mp3";
 const chargeToggle = "charge.mp3";
-// const icon = "./src/assets/img/icon.png";
+
+// Initialize previous battery status and notify threshold
 let batteryPrevious = { percent: 0, isCharging: false };
 let notifyThreshold = { low: 15, high: 80, charging: true };
 
@@ -10,9 +14,14 @@ function showNotification(title) {
     new Notification(title);
 }
 
-function playSound(file) {
-    const absolutePath = "./src/assets/audio/" + file;
+async function playSound(file) {
+    const appInfo = await ipcRenderer.invoke("get-app-info");
+
+    const absolutePath = appInfo.isPackaged
+        ? join(appInfo.getAppPath, "resources", "audio", file)
+        : "src/assets/audio/" + file;
     const audio = new Audio(absolutePath);
+
     audio.volume = 1.0;
     audio.play().catch((error) => console.error("Error playing sound:", error));
 }
