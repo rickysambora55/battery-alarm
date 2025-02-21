@@ -130,57 +130,67 @@ function BatteryInformation({ batteryInfo, batteryStatus }) {
     );
 }
 
-function AlarmConfiguration({ batteryStatus }) {
-    // const [batteryStatusPrev, setBatteryStatusPrev] = useState({
-    //     percent: 0,
-    //     isCharging: false,
-    // });
-    // const [notifyThreshold, setNotifyThreshold] = useState({
-    //     high: 80,
-    //     low: 15,
-    //     charging: true,
-    // });
+function AlarmConfiguration() {
+    const [notifyThreshold, setNotifyThreshold] = useState({
+        high: 80,
+        low: 15,
+        charging: true,
+    });
 
-    // // Audio playback
-    // useEffect(() => {
-    //     // Play audio only when values actually change
-    //     if (
-    //         batteryStatus.percent !== batteryStatusPrev.percent ||
-    //         batteryStatus.isCharging !== batteryStatusPrev.isCharging
-    //     ) {
-    //         if (
-    //             batteryStatus.percent !== 0 &&
-    //             batteryStatus.percent === notifyThreshold.low &&
-    //             !batteryStatus.isCharging
-    //         ) {
-    //             playSound(audioLow);
-    //         } else if (
-    //             batteryStatus.percent === notifyThreshold.high &&
-    //             batteryStatus.isCharging
-    //         ) {
-    //             playSound(audioHigh);
-    //         } else if (
-    //             notifyThreshold.charging &&
-    //             batteryStatus.isCharging !== batteryStatusPrev.isCharging
-    //         ) {
-    //             playSound(chargeToggle);
-    //         }
+    useEffect(() => {
+        const fetchData = async () => {
+            const high = (await window.electronStore.get("high")) || 80;
+            const low = (await window.electronStore.get("low")) || 15;
+            const charging =
+                (await window.electronStore.get("charging")) || true;
 
-    //         setBatteryStatusPrev((prev) => ({ ...prev, ...batteryStatus }));
-    //     }
-    // }, [batteryStatus]);
+            setNotifyThreshold({ high, low, charging });
+        };
 
-    // const handleCharger = (value) => {
-    //     setNotifyThreshold((prev) => ({
-    //         ...prev,
-    //         charging: value,
-    //     }));
-    // };
+        fetchData();
+    }, []);
+
+    const handleCharger = (value) => {
+        setNotifyThreshold((prev) => ({
+            ...prev,
+            charging: value,
+        }));
+
+        window.electronStore.set("charging", value);
+    };
+
+    const handleLow = (value) => {
+        let newValue = Number(value);
+
+        if (newValue < 1) newValue = 1;
+        if (newValue > 50) newValue = 50;
+
+        setNotifyThreshold((prev) => ({
+            ...prev,
+            low: newValue,
+        }));
+
+        window.electronStore.set("low", value);
+    };
+
+    const handleHigh = (value) => {
+        let newValue = Number(value);
+
+        if (newValue < 51) newValue = 51;
+        if (newValue > 100) newValue = 100;
+
+        setNotifyThreshold((prev) => ({
+            ...prev,
+            high: newValue,
+        }));
+
+        window.electronStore.set("high", value);
+    };
 
     return (
         <>
             <h2 className="title">Alarm</h2>
-            {/* <div className="settingContent">
+            <div className="settingContent">
                 <div className="settingItem">
                     Charger Connected
                     <div className="switchcontainer">
@@ -206,15 +216,7 @@ function AlarmConfiguration({ batteryStatus }) {
                             max={50}
                             value={notifyThreshold.low}
                             onChange={(e) => {
-                                let newValue = Number(e.target.value);
-
-                                if (newValue < 1) newValue = 1;
-                                if (newValue > 50) newValue = 50;
-
-                                setNotifyThreshold((prev) => ({
-                                    ...prev,
-                                    low: newValue,
-                                }));
+                                handleLow(e.target.value);
                             }}
                         />
                     </label>
@@ -229,21 +231,28 @@ function AlarmConfiguration({ batteryStatus }) {
                             value={notifyThreshold.high}
                             className="input-number"
                             onChange={(e) => {
-                                let newValue = Number(e.target.value);
-
-                                if (newValue < 51) newValue = 51;
-                                if (newValue > 100) newValue = 100;
-
-                                setNotifyThreshold((prev) => ({
-                                    ...prev,
-                                    high: newValue,
-                                }));
+                                handleHigh(e.target.value);
                             }}
                         />
                     </label>
                 </div>
-            </div> */}
+            </div>
         </>
+    );
+}
+
+function Footer() {
+    return (
+        <footer className="footer">
+            <div className="container-footer">
+                <div className="copyright">Made with ❤️ by rickysambora55</div>
+                <div className="support">
+                    <a href="https://github.com/rickysambora55/battery-alarm">
+                        Support
+                    </a>
+                </div>
+            </div>
+        </footer>
     );
 }
 
@@ -282,22 +291,25 @@ function App() {
     }, []);
 
     return (
-        <main>
-            <BatterySection>
-                <Battery batteryStatus={batteryStatus} />
-                <BatteryStatus
-                    batteryInfo={batteryInfo}
-                    batteryStatus={batteryStatus}
-                />
-            </BatterySection>
-            <div className="info">
-                <BatteryInformation
-                    batteryInfo={batteryInfo}
-                    batteryStatus={batteryStatus}
-                />
-                <AlarmConfiguration batteryStatus={batteryStatus} />
-            </div>
-        </main>
+        <>
+            <main>
+                <BatterySection>
+                    <Battery batteryStatus={batteryStatus} />
+                    <BatteryStatus
+                        batteryInfo={batteryInfo}
+                        batteryStatus={batteryStatus}
+                    />
+                </BatterySection>
+                <div className="info">
+                    <BatteryInformation
+                        batteryInfo={batteryInfo}
+                        batteryStatus={batteryStatus}
+                    />
+                    <AlarmConfiguration />
+                </div>
+            </main>
+            <Footer />
+        </>
     );
 }
 

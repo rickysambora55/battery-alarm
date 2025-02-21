@@ -10,6 +10,26 @@ import {
 import { join } from "path";
 import si from "systeminformation";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
+import Store from "electron-store";
+
+const store = new Store({
+    low: {
+        type: "number",
+        maximum: 50,
+        minimum: 1,
+        default: 15,
+    },
+    high: {
+        type: "number",
+        maximum: 100,
+        minimum: 51,
+        default: 80,
+    },
+    charging: {
+        type: "boolean",
+        default: true,
+    },
+});
 
 const icon = join(app.getAppPath(), "resources", "icon.png");
 
@@ -68,7 +88,7 @@ function createWindow() {
         autoHideMenuBar: true,
         icon: icon,
         webPreferences: {
-            preload: join(__dirname, "../preload/index.js"),
+            preload: join(__dirname, "../preload/index.mjs"),
             sandbox: false,
             nodeIntegration: false,
             contextIsolation: true,
@@ -97,6 +117,7 @@ function createWindow() {
             show: false,
             icon: icon,
             webPreferences: {
+                preload: join(__dirname, "../preload/index.mjs"),
                 nodeIntegration: true,
                 contextIsolation: false,
             },
@@ -173,6 +194,49 @@ app.whenReady().then(() => {
         isPackaged: app.isPackaged,
         getAppPath: app.getAppPath(),
     }));
+
+    // Store
+    ipcMain.handle("electron-store-get", (_event, key) => {
+        return store.get(key);
+    });
+
+    ipcMain.handle("electron-store-set", (_event, key, value) => {
+        store.set(key, value);
+        return true;
+    });
+
+    ipcMain.handle("electron-store-delete", (_event, key) => {
+        store.delete(key);
+        return true;
+    });
+
+    // Notify renderer when a value changes
+    store.onDidChange("high", (newValue) => {
+        BrowserWindow.getAllWindows().forEach((win) => {
+            win.webContents.send("electron-store-changed", {
+                key: "high",
+                value: newValue,
+            });
+        });
+    });
+
+    store.onDidChange("low", (newValue) => {
+        BrowserWindow.getAllWindows().forEach((win) => {
+            win.webContents.send("electron-store-changed", {
+                key: "low",
+                value: newValue,
+            });
+        });
+    });
+
+    store.onDidChange("charging", (newValue) => {
+        BrowserWindow.getAllWindows().forEach((win) => {
+            win.webContents.send("electron-store-changed", {
+                key: "charging",
+                value: newValue,
+            });
+        });
+    });
 });
 
 app.on("before-quit", () => {

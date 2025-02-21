@@ -9,6 +9,20 @@ const chargeToggle = "charge.mp3";
 // Initialize previous battery status and notify threshold
 let batteryPrevious = { percent: 0, isCharging: false };
 let notifyThreshold = { low: 15, high: 80, charging: true };
+async function loadNotifyThreshold() {
+    const [low, high, charging] = await Promise.all([
+        window.electronStore.get("low"),
+        window.electronStore.get("high"),
+        window.electronStore.get("charging"),
+    ]);
+
+    notifyThreshold = { low, high, charging };
+}
+
+// Listen for changes via IPC and update only the changed key
+window.electronStore.onDidChange((key, newValue) => {
+    notifyThreshold[key] = newValue;
+});
 
 function showNotification(title) {
     new Notification(title);
@@ -64,7 +78,10 @@ function notificationMonitor(batteryStatus) {
     }
 }
 
-function monitorBattery() {
+async function monitorBattery() {
+    // Initial load
+    await loadNotifyThreshold();
+
     navigator.getBattery().then((battery) => {
         function sendBatteryUpdate() {
             ipcRenderer.send("get-battery-update", {

@@ -5,6 +5,7 @@
     "main": "./out/main/index.js",
     "author": "rickysambora55",
     "homepage": "https://github.com/rickysambora55/battery-alarm",
+    "type": "module",
     "scripts": {
         "format": "prettier --write .",
         "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
@@ -20,6 +21,7 @@
     "dependencies": {
         "@electron-toolkit/preload": "^3.0.1",
         "@electron-toolkit/utils": "^4.0.0",
+        "electron-store": "^10.0.1",
         "electron-updater": "^6.3.9",
         "systeminformation": "^5.25.11"
     },

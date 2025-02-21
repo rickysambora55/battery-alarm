@@ -15,6 +15,18 @@ const batteryAPI = {
     },
 };
 
+const storeAPI = {
+    get: (key) => ipcRenderer.invoke("electron-store-get", key),
+    set: (key, value) => ipcRenderer.invoke("electron-store-set", key, value),
+    delete: (key) => ipcRenderer.invoke("electron-store-delete", key),
+    onDidChange: (callback) => {
+        ipcRenderer.removeAllListeners("electron-store-changed");
+        ipcRenderer.on("electron-store-changed", (_event, { key, value }) => {
+            callback(key, value);
+        });
+    },
+};
+
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
 // just add to the DOM global.
@@ -23,6 +35,7 @@ if (process.contextIsolated) {
         contextBridge.exposeInMainWorld("electron", electronAPI);
         contextBridge.exposeInMainWorld("api", api);
         contextBridge.exposeInMainWorld("batteryAPI", batteryAPI);
+        contextBridge.exposeInMainWorld("electronStore", storeAPI);
     } catch (error) {
         console.error(error);
     }
@@ -30,4 +43,5 @@ if (process.contextIsolated) {
     window.electron = electronAPI;
     window.api = api;
     window.batteryAPI = batteryAPI;
+    window.electronStore = storeAPI;
 }
