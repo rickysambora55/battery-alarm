@@ -6,12 +6,12 @@ import {
     Menu,
     nativeImage,
     Tray,
+    Notification,
 } from "electron";
 import { join } from "path";
 import si from "systeminformation";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import Store from "electron-store";
-
 const store = new Store({
     low: {
         type: "number",
@@ -149,7 +149,7 @@ function createWindow() {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
     // Set app user model id for windows
-    electronApp.setAppUserModelId("com.electron");
+    electronApp.setAppUserModelId("Battery Alarm");
 
     // Default open or close DevTools by F12 in development
     // and ignore CommandOrControl + R in production.
@@ -236,6 +236,14 @@ app.whenReady().then(() => {
                 value: newValue,
             });
         });
+    });
+
+    ipcMain.on("show-notification", (_event, { message }) => {
+        new Notification({
+            // title: "Battery Alarm",
+            body: message,
+            // icon: icon,
+        }).show();
     });
 });
 

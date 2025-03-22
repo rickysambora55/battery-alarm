@@ -31,6 +31,11 @@ const openLink = {
     openExternal: (url) => shell.openExternal(url),
 };
 
+const notificationAPI = {
+    sendNotification: (message) =>
+        ipcRenderer.send("show-notification", { message }),
+};
+
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
 // just add to the DOM global.
@@ -41,6 +46,7 @@ if (process.contextIsolated) {
         contextBridge.exposeInMainWorld("batteryAPI", batteryAPI);
         contextBridge.exposeInMainWorld("electronStore", storeAPI);
         contextBridge.exposeInMainWorld("openLink", openLink);
+        contextBridge.exposeInMainWorld("showNotification", notificationAPI);
     } catch (error) {
         console.error(error);
     }
@@ -50,4 +56,5 @@ if (process.contextIsolated) {
     window.batteryAPI = batteryAPI;
     window.electronStore = storeAPI;
     window.openLink = openLink;
+    window.showNotification = notificationAPI;
 }

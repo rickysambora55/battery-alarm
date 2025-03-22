@@ -24,8 +24,9 @@ window.electronStore.onDidChange((key, newValue) => {
     notifyThreshold[key] = newValue;
 });
 
-function showNotification(title) {
-    new Notification(title);
+function showNotification(msg) {
+    // new Notification("Battery Alarm", { body: msg });
+    window.showNotification.sendNotification(msg);
 }
 
 async function playSound(file) {
