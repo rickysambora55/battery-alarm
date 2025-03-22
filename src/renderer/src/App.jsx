@@ -241,15 +241,29 @@ function AlarmConfiguration() {
     );
 }
 
+function Link({ url, title }) {
+    const openExternal = (e) => {
+        e.preventDefault();
+        window.openLink.openExternal(e.currentTarget.href);
+    };
+
+    return (
+        <a href={url} onClick={openExternal}>
+            {title}
+        </a>
+    );
+}
+
 function Footer() {
     return (
         <footer className="footer">
             <div className="container-footer">
                 <div className="copyright">Made with ❤️ by rickysambora55</div>
                 <div className="support">
-                    <a href="https://github.com/rickysambora55/battery-alarm">
-                        Support
-                    </a>
+                    <Link
+                        url="https://github.com/rickysambora55/battery-alarm"
+                        title="GitHub"
+                    />
                 </div>
             </div>
         </footer>

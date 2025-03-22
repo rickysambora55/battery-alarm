@@ -109,7 +109,7 @@ function createWindow() {
         shell.openExternal(details.url);
         return { action: "deny" };
     });
-    // mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools();
 
     if (!backgroundWindow) {
         // Create a hidden background window
